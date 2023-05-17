@@ -3,30 +3,31 @@
 require "databaseconnector.php";
 
 class Pet {
+	public function __contruct($pet){
+                 $this->db = (new DatabaseConnector())->getConnection();
+		 $this->id = $pet;
+        }
 	// save data
-	function create($pet) {
-		$this->db = (new DatabaseConnector())->getConnection();	
-		$r = $this->db->Query("SELECT id FROM pets WHERE name = '$pet'");
-		$res = mysql_fetch_array($r);
-		if(!$res[id] && !$_POST[pet_name]) {
-			$this->error = 'noaccount';
-		} else if(!$res[id] && $_POST[pet_name]) {
-		  $r = $this->db->Query("INSERT INTO pets (name,pet_name,lastfed,lastwashed,lastplayed,lastdoc) VALUES ('$pet','$_POST[pet_name]',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)");	
-	  	$r = $this->db->Query("SELECT id FROM pets WHERE name = '$pet'");
+	public function create() {	
+		  $r = $this->db->Query("SELECT * FROM pets WHERE id = $this->id");
 		  $res = mysql_fetch_array($r);
-	  	$this->id = $res[id];
-		} else {
-		$this->id = $res[id];
-		}
+		if(!$_POST[pet]) {
+		  $this->error = 'empty';
+		} else if(!$res[id] && $_POST[pet]) {
+		  $r = $this->db->Query("INSERT INTO pets (name,pet_name,lastfed,lastwashed,lastplayed,lastdoc) VALUES ('pet','$_POST[pet]',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)");	
+	  	  $r = $this->db->Query("SELECT id FROM pets WHERE name = $this->id");
+		  $res = mysql_fetch_array($r);
+	          $this->id = $res[id];
+		} 
 	}
 
-	function burn($pet) {
-		$r = $this->db->Query("DELETE FROM pets WHERE name = '$pet'");
+	public function burn() {
+		$r = $this->db->Query("DELETE FROM pets WHERE name = $this->id");
 		exit;
 	}
 
 	// calculations 
-	function update($pet, $action) {
+	public function update($action) {
 		$this->calculateFullness();
 		$this->calculateCleanliness();	
 		$this->calculateHealth();	
@@ -34,7 +35,7 @@ class Pet {
 		$this->calculateDeath();		
 	}
 	
-	function calculateAgeSize() {
+	public function calculateAgeSize() {
 		$r = $this->db->Query("SELECT UNIX_TIMESTAMP(created) AS created,UNIX_TIMESTAMP(dead) as dead FROM pets WHERE id = $this->id");
 		$res = mysql_fetch_array($r);
 		$time = time();
@@ -48,7 +49,7 @@ class Pet {
 		return $age;
 	}
 	
-	function calculateFullness() {
+	public function calculateFullness() {
 		$r = $this->db->Query("SELECT fullness,lastfed AS lastfed_original, UNIX_TIMESTAMP(lastfed) as lastfed FROM pets WHERE id = $this->id");
 		$res = mysql_fetch_array($r);
 		$mins = $this->getNightMins($res[lastfed_original]);
@@ -64,7 +65,7 @@ class Pet {
 		return $r;
 	}
 	
-	function calculateMood() {
+	public function calculateMood() {
 		$r = $this->db->Query("SELECT lastplayed as lastplayed_original, UNIX_TIMESTAMP(lastplayed) AS lastplayed,fullness,cleanliness,health,mood FROM pets WHERE id = $this->id");
 		$res = mysql_fetch_array($r);
 		$mins = $this->getNightMins($res[lastplayed_original]);
@@ -80,7 +81,7 @@ class Pet {
 		return $r;		
 	}
 	
-	function calculateCleanliness() {
+	public function calculateCleanliness() {
 		$r = $this->db->Query("SELECT cleanliness, lastwashed as lastwashed_original,UNIX_TIMESTAMP(lastwashed) as lastwashed FROM pets WHERE id = $this->id");
 		$res = mysql_fetch_array($r);
 		$mins = $this->getNightMins($res[lastwashed_original]);
@@ -96,7 +97,7 @@ class Pet {
 		return $r;				
 	}
 	
-	function calculateHealth() {
+	public function calculateHealth() {
 		$r = $this->db->Query("SELECT UNIX_TIMESTAMP(created) AS created,lastdoc AS lastdoc_original, UNIX_TIMESTAMP(lastdoc) AS lastdoc,fullness,cleanliness,mood,health FROM tamagotchis WHERE id = $this->id");
 		$res = mysql_fetch_array($r);
 		$mins = $this->getNightMins($res[lastdoc_original]);
@@ -110,7 +111,7 @@ class Pet {
 		return $r;
 	}
 	
-	function calculateDeath() {
+	public function calculateDeath() {
 		$r = $this->db->Query("SELECT * FROM pets WHERE id = $this->id");
 		$res = mysql_fetch_array($r);
 		$dead = 0;
@@ -124,14 +125,14 @@ class Pet {
 	}
 	
 	// get full pet info
-	function show($pet) {
-		$r = $this->db->Query("SELECT * FROM pets WHERE id = '$pet'");
+	public function show() {
+		$r = $this->db->Query("SELECT * FROM pets WHERE id = $this->id");
 		$res = mysql_fetch_array($r);
 		return $res;
 	}
 	
 	// actions
-	function actionFeed() {
+	public function actionFeed() {
 		$r = $this->db->Query("SELECT UNIX_TIMESTAMP(lastfed) AS lastfed,fullness FROM pets WHERE id = $this->id");
 		$res = mysql_fetch_array($r);
 		$change = rand(3,20) + (10 -$res[fullness]/10);
@@ -141,12 +142,12 @@ class Pet {
 		return $change;		
 	}
 
-	function actionDoctor() {
+	public function actionDoctor() {
 		$r = $this->db->Query("UPDATE pets SET lastdoc = CURRENT_TIMESTAMP WHERE id = $this->id");
 		return $change;				
 	}
 	
-	function actionShower() {
+	public function actionShower() {
 		$r = $this->db->Query("SELECT cleanliness FROM pets WHERE id = $this->id");
 		$res = mysql_fetch_array($r);
 		$change = rand(5,20) + (10 -$res[cleanliness]/10);
@@ -156,7 +157,7 @@ class Pet {
 		return $change;
 	}
 	
-	function actionPlay($number) {
+	public function actionPlay($number) {
 		$secretNumber = rand(0,1);
 		if($secretNumber == $number) {
 			$r = $this->db->Query("SELECT mood FROM pets WHERE id = $this->id");
@@ -171,7 +172,7 @@ class Pet {
 	}
 	
 	// calculate time
-	function getNightMins($timestamp) {
+	public function getNightMins($timestamp) {
 		$last = split(" ",$timestamp);
 		$last = split(":",$last[1]);
 		$lastH = $last[0];
@@ -190,7 +191,7 @@ class Pet {
 		return $minutesNight;
 	}
 	
-	function getNightMinsLifetime() {
+	public function getNightMinsLifetime() {
 	    $result = $this->db->Query("SELECT UNIX_TIMESTAMP(NOW()) - UNIX_TIMESTAMP(created) as secondsliving,created FROM pets WHERE id = $this->id");
 		$r = mysql_fetch_array($result);
 		$last = split(" ",$r[created]);
