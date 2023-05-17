@@ -3,9 +3,10 @@
 require "databaseconnector.php";
 
 class Pet {
+	
 	public function __contruct($pet){
            $this->db = (new DatabaseConnector())->getConnection();
-	      	 $this->id = $pet;
+	   $this->id = $pet;
         }
   
 	// save data
