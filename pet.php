@@ -167,6 +167,52 @@ class Pet {
 		}
 		return 0;
 	}
+	
+	// calculate time
+	function getNightMins($timestamp) {
+		$last = split(" ",$timestamp);
+		$last = split(":",$last[1]);
+		$lastH = $last[0];
+		$lastM = $last[1];
+		$nowH = date("G");
+		$nowM = date("i");
+		$minutesNight = 0;
+		if( ($lastH < 9) || ($lastH > $nowH) ) {
+			// overnight
+			if($lastH < 9) {
+					  $minutesNight = 9 * 60 - $lastH *60 - $lastM;
+			} else {
+			  	   	  $minutesNight = 9 * 60;
+			}
+		}
+		return $minutesNight;
+	}
+	
+	function getNightMinsLifetime() {
+	    $result = $this->db->Query("SELECT UNIX_TIMESTAMP(NOW()) - UNIX_TIMESTAMP(created) as secondsliving,created FROM pets WHERE id = $this->id");
+		$r = mysql_fetch_array($result);
+		$last = split(" ",$r[created]);
+		$last_date = split("-",$last[0]); // 0 = year, 1 = month, 2 = day
+		$last_time = split(":",$last[1]); // 0 = hour, 1 = minute
+		$now_month = date("n");
+		$now_month_string = date("F");
+		$now_day = date("j");
+		$now_hour = date("G");
+		$now_minute = date("i");
+		if( $last_date[1] == $now_month && $last_date[2] == $now_day) {
+			// created today
+			return $this->getNightMins($r[created]);
+		} else {
+		   // mins first day
+		   if($last_time[0] < 9) {
+		   		$minutesNight = 9 * 60 - $last_time[0] *60 - $last_time[1];   					
+		   } 
+		   $minutesNight = $minutesNight + 9 * 60 * ($now_day - $last_date[2]-1);
+		   $minutesNight = $minutesNight + $this->getNightMins(strtotime("$now_day $now_month_string $last_date[0]"));
+		}
+		return $minutesNight;
+	}
+	
 };
 
 ?>
