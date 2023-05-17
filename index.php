@@ -29,19 +29,19 @@ $action = parse_str(file_get_contents('php://input'), $_PUT);
 } 
 
 // pass the request method, pet ID, action and other data to the controller and process the HTTP request:
-$pet = new Pet();
+$pet = new Pet($petId);
 switch($requestMethod){
     case 'GET':
-      $pet->show($petId);  
+      $pet->show();  
     break;  
     case 'POST':
-      $pet->create($petId);  
+      $pet->create();  
     break; 
     case 'PUT':
-      $pet->update($petId, $action);  
+      $pet->update($action);  
     break;   
     case 'DELETE':
-     $pet->burn($petId);   
+     $pet->burn();   
     break;           
 }
 exit();
