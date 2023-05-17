@@ -35,7 +35,10 @@ switch($requestMethod){
     break; 
     case 'PUT':
         
-    break;         
+    break;   
+    case 'DELETE':
+        
+    break;           
 }
 exit();
 
