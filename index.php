@@ -24,18 +24,21 @@ if (isset($uri[2])) {
 }
 
 $requestMethod = $_SERVER["REQUEST_METHOD"];
+if($requestMethod == 'PUT') {
+$action = parse_str(file_get_contents('php://input'), $_PUT);  
+} 
 
 // pass the request method, pet ID, action and other data to the controller and process the HTTP request:
 $pet = new Pet();
 switch($requestMethod){
     case 'GET':
-        
+      $pet->getData($petId);  
     break;  
     case 'POST':
-        
+      $pet->general($petId);  
     break; 
     case 'PUT':
-        
+      $pet->calculate($petId, $action);  
     break;   
     case 'DELETE':
      $pet->burn($petId);   
