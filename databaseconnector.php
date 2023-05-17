@@ -6,6 +6,7 @@ class DatabaseConnector {
 
     public function __construct()
     {
+        // update MySQL login details, environment variables can be used
         $host = getenv('DB_HOST');
         $port = getenv('DB_PORT');
         $db   = getenv('DB_DATABASE');
