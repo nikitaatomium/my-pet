@@ -12,7 +12,9 @@ class Pet {
 	  	$r = $this->db->Query("SELECT id FROM pets WHERE name = '$pet'");
 		  $res = mysql_fetch_array($r);
 	  	$this->id = $res[id];
-		} else $this->id = $res[id];
+		} else {
+		$this->id = $res[id];
+		}
 	}
 
 	function restart($pet) {
@@ -80,7 +82,7 @@ class Pet {
 		if( ($res[fullness] - rand(-5,5)) < 10) $dead = 1;
 		if( ($res[health] - rand(-5,5)) < 10) $dead = 1;
 		if( ($res[mood] < 20) AND ($res[hunger] <20) ) $dead = 1;
-		//if($dead == 1) $r = $this->db->Query("UPDATE pets SET health = 0,dead = CURRENT_TIMESTAMP WHERE id = $this->id");	
+		if($dead == 1) $r = $this->db->Query("UPDATE pets SET health = 0,dead = CURRENT_TIMESTAMP WHERE id = $this->id");	
 		$this->tempDeath = $death;
 		return $r;		
 	}
@@ -88,20 +90,15 @@ class Pet {
 	function calculateFullness() {
 		$r = $this->db->Query("SELECT fullness,lastfed AS lastfed_original, UNIX_TIMESTAMP(lastfed) as lastfed FROM pets WHERE id = $this->id");
 		$res = mysql_fetch_array($r);
-		
 		$mins = $this->getNightMins($res[lastfed_original]);
-
 		$secondsNotFed = time() + rand(-360,360) - $res[lastfed] - $mins * 60;	 	
 		$hungerPercent = ($secondsNotFed / 12000) * 100; 
 		$fullnessPercent = 100 - $hungerPercent;
-
 		if($fullnessPercent > $res[fullness]) $fullnessPercent = $res[fullness];
 		if($fullnessPercent > 100) $fullnessPercent = 100;
 		if($fullnessPercent < 0) $fullnessPercent = 0;
 		$fullnessPercent = round($fullnessPercent);
-
-		$r = $this->db->Query("UPDATE pets SET fullness = $fullnessPercent WHERE id = $this->id");
-				
+		$r = $this->db->Query("UPDATE pets SET fullness = $fullnessPercent WHERE id = $this->id");	
 		$this->tempFullness = $fullnessPercent;
 		return $r;
 	}
@@ -109,22 +106,15 @@ class Pet {
 	function calculateMood() {
 		$r = $this->db->Query("SELECT lastplayed as lastplayed_original, UNIX_TIMESTAMP(lastplayed) AS lastplayed,fullness,cleanliness,health,mood FROM pets WHERE id = $this->id");
 		$res = mysql_fetch_array($r);
-		
 		$mins = $this->getNightMins($res[lastplayed_original]);
-		
 		$secondsNotPlayed = time() + rand(-360,360) - $res[lastplayed] - $mins * 60;
 		$badMoodPercent = ($secondsNotPlayed / 32000) * 100;
 		$moodPercent = 100 - $badMoodPercent;
-
 		$moodPercent = round($moodPercent);
-
 		$moodPercent = $moodPercent - (100-$res[fullness])/10 - (100-$res[cleanliness])/10 - (100-$res[health])/10;
-
 		if($moodPercent > 100) $moodPercent = 100;
 		if($moodPercent < 0) $moodPercent = 0;
-		
-		$r = $this->db->Query("UPDATE pets SET mood = $moodPercent WHERE id = $this->id");
-				
+		$r = $this->db->Query("UPDATE pets SET mood = $moodPercent WHERE id = $this->id");		
 		$this->tempMood = $moodPercent;
 		return $r;		
 	}
@@ -142,19 +132,16 @@ class Pet {
 		$lastM = $last[1];
 		$nowH = date("G");
 		$nowM = date("i");
-	
 		$minutesNight = 0;
 		if( ($lastH < 9) || ($lastH > $nowH) ) {
 			if($lastH < 9) {
 					  $minutesNight = 9 * 60 - $lastH *60 - $lastM;
 			} else {
 			  	   	  $minutesNight = 9 * 60;
-			}
-			
+			}	
 		}
 		return $minutesNight;
 	}
-	
 	
 	function getNightMinsLifetime() {
 	    $result = $this->db->Query("SELECT UNIX_TIMESTAMP(NOW()) - UNIX_TIMESTAMP(created) as secondsliving,created FROM pets WHERE id = $this->id");
@@ -184,10 +171,8 @@ class Pet {
 	function actionFeed() {
 		$r = $this->db->Query("SELECT UNIX_TIMESTAMP(lastfed) AS lastfed,fullness FROM pets WHERE id = $this->id");
 		$res = mysql_fetch_array($r);
-		
 		$change = rand(3,20) + (10 -$res[fullness]/10);
 		$newFullness = $res[fullness] + $change;
-
 		if($newFullness > 100) $newFullness = 100;
 		$r = $this->db->Query("UPDATE pets SET fullness = $newFullness,lastfed = CURRENT_TIMESTAMP WHERE id = $this->id");
 		return $change;		
@@ -202,7 +187,6 @@ class Pet {
 	function actionShower() {
 		$r = $this->db->Query("SELECT cleanliness FROM pets WHERE id = $this->id");
 		$res = mysql_fetch_array($r);
-		
 		$change = rand(5,20) + (10 -$res[cleanliness]/10);
 		$newCleanliness = $res[cleanliness] + $change;
 		if($newCleanliness > 100) $newCleanliness = 100;
