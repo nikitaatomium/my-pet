@@ -2,7 +2,7 @@
 
 class Pet {
 	function Pet($pet) {
-		$this->db = new DBConnection;	
+		$this->db = new DatabaseConnector;	
 		$r = $this->db->Query("SELECT id FROM pets WHERE name = '$pet'");
 		$res = mysql_fetch_array($r);
 		if(!$res[id] && !$_POST[pet_name]) {
@@ -43,7 +43,39 @@ class Pet {
 		$this->tempAge = $age[minutes];
 		return $age;
 	}
-		
+	
+	function calculateFullness() {
+		$r = $this->db->Query("SELECT fullness,lastfed AS lastfed_original, UNIX_TIMESTAMP(lastfed) as lastfed FROM pets WHERE id = $this->id");
+		$res = mysql_fetch_array($r);
+		$mins = $this->getNightMins($res[lastfed_original]);
+		$secondsNotFed = time() + rand(-360,360) - $res[lastfed] - $mins * 60;	 	
+		$hungerPercent = ($secondsNotFed / 12000) * 100; 
+		$fullnessPercent = 100 - $hungerPercent;
+		if($fullnessPercent > $res[fullness]) $fullnessPercent = $res[fullness];
+		if($fullnessPercent > 100) $fullnessPercent = 100;
+		if($fullnessPercent < 0) $fullnessPercent = 0;
+		$fullnessPercent = round($fullnessPercent);
+		$r = $this->db->Query("UPDATE pets SET fullness = $fullnessPercent WHERE id = $this->id");	
+		$this->tempFullness = $fullnessPercent;
+		return $r;
+	}
+	
+	function calculateMood() {
+		$r = $this->db->Query("SELECT lastplayed as lastplayed_original, UNIX_TIMESTAMP(lastplayed) AS lastplayed,fullness,cleanliness,health,mood FROM pets WHERE id = $this->id");
+		$res = mysql_fetch_array($r);
+		$mins = $this->getNightMins($res[lastplayed_original]);
+		$secondsNotPlayed = time() + rand(-360,360) - $res[lastplayed] - $mins * 60;
+		$badMoodPercent = ($secondsNotPlayed / 32000) * 100;
+		$moodPercent = 100 - $badMoodPercent;
+		$moodPercent = round($moodPercent);
+		$moodPercent = $moodPercent - (100-$res[fullness])/10 - (100-$res[cleanliness])/10 - (100-$res[health])/10;
+		if($moodPercent > 100) $moodPercent = 100;
+		if($moodPercent < 0) $moodPercent = 0;
+		$r = $this->db->Query("UPDATE pets SET mood = $moodPercent WHERE id = $this->id");		
+		$this->tempMood = $moodPercent;
+		return $r;		
+	}
+	
 	function calculateCleanliness() {
 		$r = $this->db->Query("SELECT cleanliness, lastwashed as lastwashed_original,UNIX_TIMESTAMP(lastwashed) as lastwashed FROM pets WHERE id = $this->id");
 		$res = mysql_fetch_array($r);
@@ -84,38 +116,6 @@ class Pet {
 		if( ($res[mood] < 20) AND ($res[hunger] <20) ) $dead = 1;
 		if($dead == 1) $r = $this->db->Query("UPDATE pets SET health = 0,dead = CURRENT_TIMESTAMP WHERE id = $this->id");	
 		$this->tempDeath = $death;
-		return $r;		
-	}
-	
-	function calculateFullness() {
-		$r = $this->db->Query("SELECT fullness,lastfed AS lastfed_original, UNIX_TIMESTAMP(lastfed) as lastfed FROM pets WHERE id = $this->id");
-		$res = mysql_fetch_array($r);
-		$mins = $this->getNightMins($res[lastfed_original]);
-		$secondsNotFed = time() + rand(-360,360) - $res[lastfed] - $mins * 60;	 	
-		$hungerPercent = ($secondsNotFed / 12000) * 100; 
-		$fullnessPercent = 100 - $hungerPercent;
-		if($fullnessPercent > $res[fullness]) $fullnessPercent = $res[fullness];
-		if($fullnessPercent > 100) $fullnessPercent = 100;
-		if($fullnessPercent < 0) $fullnessPercent = 0;
-		$fullnessPercent = round($fullnessPercent);
-		$r = $this->db->Query("UPDATE pets SET fullness = $fullnessPercent WHERE id = $this->id");	
-		$this->tempFullness = $fullnessPercent;
-		return $r;
-	}
-	
-	function calculateMood() {
-		$r = $this->db->Query("SELECT lastplayed as lastplayed_original, UNIX_TIMESTAMP(lastplayed) AS lastplayed,fullness,cleanliness,health,mood FROM pets WHERE id = $this->id");
-		$res = mysql_fetch_array($r);
-		$mins = $this->getNightMins($res[lastplayed_original]);
-		$secondsNotPlayed = time() + rand(-360,360) - $res[lastplayed] - $mins * 60;
-		$badMoodPercent = ($secondsNotPlayed / 32000) * 100;
-		$moodPercent = 100 - $badMoodPercent;
-		$moodPercent = round($moodPercent);
-		$moodPercent = $moodPercent - (100-$res[fullness])/10 - (100-$res[cleanliness])/10 - (100-$res[health])/10;
-		if($moodPercent > 100) $moodPercent = 100;
-		if($moodPercent < 0) $moodPercent = 0;
-		$r = $this->db->Query("UPDATE pets SET mood = $moodPercent WHERE id = $this->id");		
-		$this->tempMood = $moodPercent;
 		return $r;		
 	}
 	
