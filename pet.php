@@ -1,8 +1,9 @@
 <?php
 
 class Pet {
-	function Pet($pet) {
-		$this->db = new DatabaseConnector;	
+	// save data
+	function general($pet) {
+		$this->db = (new DatabaseConnector())->getConnection();	
 		$r = $this->db->Query("SELECT id FROM pets WHERE name = '$pet'");
 		$res = mysql_fetch_array($r);
 		if(!$res[id] && !$_POST[pet_name]) {
@@ -17,12 +18,13 @@ class Pet {
 		}
 	}
 
-	function restart($pet) {
+	function burn($pet) {
 		$r = $this->db->Query("DELETE FROM pets WHERE name = '$pet'");
 		exit;
 	}
 
-	function Calculate() {
+	// calculations 
+	function calculate() {
 		$this->calculateFullness();
 		$this->calculateCleanliness();	
 		$this->calculateHealth();	
@@ -119,55 +121,14 @@ class Pet {
 		return $r;		
 	}
 	
+	// get full pet info
 	function getData() {
 		$r = $this->db->Query("SELECT * FROM pets WHERE id = $this->id");
 		$res = mysql_fetch_array($r);
 		return $res;
 	}
 	
-	function getNightMins($timestamp) {
-		$last = split(" ",$timestamp);
-		$last = split(":",$last[1]);
-		$lastH = $last[0];
-		$lastM = $last[1];
-		$nowH = date("G");
-		$nowM = date("i");
-		$minutesNight = 0;
-		if( ($lastH < 9) || ($lastH > $nowH) ) {
-			if($lastH < 9) {
-					  $minutesNight = 9 * 60 - $lastH *60 - $lastM;
-			} else {
-			  	   	  $minutesNight = 9 * 60;
-			}	
-		}
-		return $minutesNight;
-	}
-	
-	function getNightMinsLifetime() {
-	    $result = $this->db->Query("SELECT UNIX_TIMESTAMP(NOW()) - UNIX_TIMESTAMP(created) as secondsliving,created FROM pets WHERE id = $this->id");
-		$r = mysql_fetch_array($result);
-		$last = split(" ",$r[created]);
-		$last_date = split("-",$last[0]); // 0 = jahr, 1 = monat, 2 = tag
-		$last_time = split(":",$last[1]); // 0 = stunde, 1 = minute 
-		$now_month = date("n");
-		$now_month_string = date("F");
-		$now_day = date("j");
-		$now_hour = date("G");
-		$now_minute = date("i");
-		if( $last_date[1] == $now_month && $last_date[2] == $now_day) {
-			// created today
-			return $this->getNightMins($r[created]);
-		} else {
-		   if($last_time[0] < 9) {
-		   		$minutesNight = 9 * 60 - $last_time[0] *60 - $last_time[1];   					
-		   } 
-		   $minutesNight = $minutesNight + 9 * 60 * ($now_day - $last_date[2]-1);
-		   $minutesNight = $minutesNight + $this->getNightMins(strtotime("$now_day $now_month_string $last_date[0]"));
-		}
-		return $minutesNight;
-	}
-	
-	
+	// actions
 	function actionFeed() {
 		$r = $this->db->Query("SELECT UNIX_TIMESTAMP(lastfed) AS lastfed,fullness FROM pets WHERE id = $this->id");
 		$res = mysql_fetch_array($r);
@@ -178,7 +139,6 @@ class Pet {
 		return $change;		
 	}
 
-	
 	function actionDoctor() {
 		$r = $this->db->Query("UPDATE pets SET lastdoc = CURRENT_TIMESTAMP WHERE id = $this->id");
 		return $change;				
