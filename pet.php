@@ -1,5 +1,7 @@
 <?php
 
+require "databaseconnector.php";
+
 class Pet {
 	// save data
 	function general($pet) {
