@@ -32,16 +32,16 @@ $action = parse_str(file_get_contents('php://input'), $_PUT);
 $pet = new Pet($petId);
 switch($requestMethod){
     case 'GET':
-      $pet->show();  
+      echo $pet->show();  
     break;  
     case 'POST':
-      $pet->create();  
+      echo $pet->create();  
     break; 
     case 'PUT':
-      $pet->update($action);  
+      echo $pet->update($action);  
     break;   
     case 'DELETE':
-     $pet->burn();   
+     echo $pet->burn();   
     break;           
 }
 exit();
