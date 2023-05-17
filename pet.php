@@ -5,7 +5,6 @@ class Pet {
 		$this->db = new DBConnection;	
 		$r = $this->db->Query("SELECT id FROM pets WHERE name = '$pet'");
 		$res = mysql_fetch_array($r);
-		
 		if(!$res[id] && !$_POST[pet_name]) {
 			$this->error = 'noaccount';
 		} else if(!$res[id] && $_POST[pet_name]) {
@@ -18,7 +17,6 @@ class Pet {
 
 	function restart($pet) {
 		$r = $this->db->Query("DELETE FROM pets WHERE name = '$pet'");
-		header("Location: /bigfatpig");
 		exit;
 	}
 
@@ -37,11 +35,9 @@ class Pet {
 		if($res[dead] != 0) {
 			$time = $res[dead];
 		}
-		
 		$age[minutes] = round(($time - $res[created]) / 60);
 		$age[hours] = round(($time - $res[created]-1800) / 3600);
 		$age[days]  = round(($time - $res[created]) / 86400);
-		
 		$this->tempAge = $age[minutes];
 		return $age;
 	}
@@ -49,20 +45,15 @@ class Pet {
 	function calculateCleanliness() {
 		$r = $this->db->Query("SELECT cleanliness, lastwashed as lastwashed_original,UNIX_TIMESTAMP(lastwashed) as lastwashed FROM pets WHERE id = $this->id");
 		$res = mysql_fetch_array($r);
-		
 		$mins = $this->getNightMins($res[lastwashed_original]);
-	
 		$secondsNotWashed = time() + rand(-360,360) - $res[lastwashed] - $mins *60;		
 		$dirtyPercent = ($secondsNotWashed / 86400) * 100; 
 		$cleanlinessPercent = 100 - $dirtyPercent;
-
 		if($cleanlinessPercent > $res[cleanliness]) $cleanlinessPercent = $res[cleanliness];
 		if($cleanlinessPercent > 100) $cleanlinessPercent = 100;
 		if($cleanlinessPercent < 0) $cleanlinessPercent = 0;
 		$cleanlinessPercent = round($cleanlinessPercent);
-
 		$r = $this->db->Query("UPDATE pets SET cleanliness = $cleanlinessPercent WHERE id = $this->id");
-		
 		$this->tempCleanliness = $cleanlinessPercent;
 		return $r;				
 	}
@@ -70,17 +61,13 @@ class Pet {
 	function calculateHealth() {
 		$r = $this->db->Query("SELECT UNIX_TIMESTAMP(created) AS created,lastdoc AS lastdoc_original, UNIX_TIMESTAMP(lastdoc) AS lastdoc,fullness,cleanliness,mood,health FROM tamagotchis WHERE id = $this->id");
 		$res = mysql_fetch_array($r);
-		
 		$mins = $this->getNightMins($res[lastdoc_original]);
-		
 		$minutesNotDoc = (time() - $res[lastdoc] - $mins * 60)/60;
-		
 		$age[minutes] = round((time() - $res[created]) / 60);
 		$healthPercent = 100 - ($age[minutes]/200) - ($minutesNotDoc/10) - ( (100-$res[fullness])/10 ) - ( (100-$res[mood])/10 ) - ( (100-$res[cleanliness])/10 );
 		$healthPercent = round($healthPercent);
 		if($healthPercent < 0) $healthPercent = 0;
 		$r = $this->db->Query("UPDATE pets SET health = $healthPercent WHERE id = $this->id");
-		
 		$this->tempHealth = $healthPercent;
 		return $r;
 	}
@@ -88,16 +75,12 @@ class Pet {
 	function calculateDeath() {
 		$r = $this->db->Query("SELECT * FROM pets WHERE id = $this->id");
 		$res = mysql_fetch_array($r);
-		
 		$dead = 0;
-		
 		if( ($res[mood] - rand(-5,5)) < 10) $dead = 1;
 		if( ($res[fullness] - rand(-5,5)) < 10) $dead = 1;
 		if( ($res[health] - rand(-5,5)) < 10) $dead = 1;
 		if( ($res[mood] < 20) AND ($res[hunger] <20) ) $dead = 1;
-		
-		//if($dead == 1) $r = $this->db->Query("UPDATE pets SET health = 0,dead = CURRENT_TIMESTAMP WHERE id = $this->id");
-				
+		//if($dead == 1) $r = $this->db->Query("UPDATE pets SET health = 0,dead = CURRENT_TIMESTAMP WHERE id = $this->id");	
 		$this->tempDeath = $death;
 		return $r;		
 	}
@@ -148,7 +131,6 @@ class Pet {
 	
 	function getData() {
 		$r = $this->db->Query("SELECT * FROM pets WHERE id = $this->id");
-		
 		$res = mysql_fetch_array($r);
 		return $res;
 	}
@@ -156,7 +138,6 @@ class Pet {
 	function getNightMins($timestamp) {
 		$last = split(" ",$timestamp);
 		$last = split(":",$last[1]);
-
 		$lastH = $last[0];
 		$lastM = $last[1];
 		$nowH = date("G");
@@ -164,7 +145,6 @@ class Pet {
 	
 		$minutesNight = 0;
 		if( ($lastH < 9) || ($lastH > $nowH) ) {
-			/* über nacht */
 			if($lastH < 9) {
 					  $minutesNight = 9 * 60 - $lastH *60 - $lastM;
 			} else {
@@ -179,28 +159,22 @@ class Pet {
 	function getNightMinsLifetime() {
 	    $result = $this->db->Query("SELECT UNIX_TIMESTAMP(NOW()) - UNIX_TIMESTAMP(created) as secondsliving,created FROM pets WHERE id = $this->id");
 		$r = mysql_fetch_array($result);
-		
 		$last = split(" ",$r[created]);
 		$last_date = split("-",$last[0]); // 0 = jahr, 1 = monat, 2 = tag
 		$last_time = split(":",$last[1]); // 0 = stunde, 1 = minute 
-	
 		$now_month = date("n");
 		$now_month_string = date("F");
 		$now_day = date("j");
 		$now_hour = date("G");
 		$now_minute = date("i");
-	
 		if( $last_date[1] == $now_month && $last_date[2] == $now_day) {
 			// created today
 			return $this->getNightMins($r[created]);
 		} else {
-		   // mins first day
 		   if($last_time[0] < 9) {
 		   		$minutesNight = 9 * 60 - $last_time[0] *60 - $last_time[1];   					
 		   } 
-		   // mins days between -- temp! monatsende!!!
 		   $minutesNight = $minutesNight + 9 * 60 * ($now_day - $last_date[2]-1);
-		   // mins today
 		   $minutesNight = $minutesNight + $this->getNightMins(strtotime("$now_day $now_month_string $last_date[0]"));
 		}
 		return $minutesNight;
@@ -241,11 +215,9 @@ class Pet {
 		if($secretNumber == $number) {
 			$r = $this->db->Query("SELECT mood FROM pets WHERE id = $this->id");
 			$res = mysql_fetch_array($r);
-			
 			$change = rand(5,20) + (10 -$res[mood]/10);
 			$newMood = $res[mood] + $change;
 			if($newMood > 100) $newMood = 100;				
-			
 			$r = $this->db->Query("UPDATE pets SET mood = $newMood, lastplayed = CURRENT_TIMESTAMP WHERE id = $this->id");							
 			return 1;
 		}
