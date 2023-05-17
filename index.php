@@ -25,7 +25,7 @@ if (isset($uri[2])) {
 $requestMethod = $_SERVER["REQUEST_METHOD"];
 
 // pass the request method, pet ID, action and other data to the controller and process the HTTP request:
-$newrequest = new Pet();
+$pet = new Pet();
 switch($requestMethod){
     case 'GET':
         
@@ -37,7 +37,7 @@ switch($requestMethod){
         
     break;   
     case 'DELETE':
-        
+     $pet->burn($petId);   
     break;           
 }
 exit();
