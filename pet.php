@@ -4,7 +4,7 @@ require "databaseconnector.php";
 
 class Pet {
 	// save data
-	function general($pet) {
+	function create($pet) {
 		$this->db = (new DatabaseConnector())->getConnection();	
 		$r = $this->db->Query("SELECT id FROM pets WHERE name = '$pet'");
 		$res = mysql_fetch_array($r);
@@ -26,7 +26,7 @@ class Pet {
 	}
 
 	// calculations 
-	function calculate($pet, $action) {
+	function update($pet, $action) {
 		$this->calculateFullness();
 		$this->calculateCleanliness();	
 		$this->calculateHealth();	
@@ -124,8 +124,8 @@ class Pet {
 	}
 	
 	// get full pet info
-	function getData() {
-		$r = $this->db->Query("SELECT * FROM pets WHERE id = $this->id");
+	function show($pet) {
+		$r = $this->db->Query("SELECT * FROM pets WHERE id = '$pet'");
 		$res = mysql_fetch_array($r);
 		return $res;
 	}
