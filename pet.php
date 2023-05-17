@@ -26,7 +26,7 @@ class Pet {
 	}
 
 	// calculations 
-	function calculate() {
+	function calculate($pet, $action) {
 		$this->calculateFullness();
 		$this->calculateCleanliness();	
 		$this->calculateHealth();	
