@@ -1,5 +1,5 @@
-# oh-my-pet
-OMT (Oh My Pet) is a virtual pet rest API written in PHP.
+# my-pet
+My Pet is a virtual pet rest API written in PHP.
 AVAILABLE COMMANDS:
 1) To get a specific pet information:
 GET /pets/{id}
